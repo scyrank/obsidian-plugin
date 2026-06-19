@@ -1,5 +1,7 @@
 .kh-task-important-text {
-  background-color: rgba(255, 230, 120, 0.35);
+  background-color: rgba(255, 230, 120, 0.30);
+  color: #ff4b3e;
+  font-weight: 600;
   border-radius: 4px;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
