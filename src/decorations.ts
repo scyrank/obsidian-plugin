@@ -84,19 +84,15 @@ class TaskMarkerWidget extends WidgetType {
   }
 
   override toDOM(view: EditorView): HTMLElement {
-    const element = document.createElement("span");
     const checked = this.state !== " ";
+    const element = document.createElement("input");
 
-    element.className = checked
-      ? "kh-task-marker-widget kh-task-marker-widget-checked"
-      : "kh-task-marker-widget";
-    element.setAttribute("role", "checkbox");
+    element.type = "checkbox";
+    element.className = "task-list-item-checkbox kh-task-marker-widget";
+    element.checked = checked;
+    element.tabIndex = -1;
     element.setAttribute("aria-checked", checked ? "true" : "false");
     element.title = checked ? "Mark as incomplete" : "Mark as complete";
-
-    if (checked) {
-      element.textContent = "✓";
-    }
 
     element.addEventListener("mousedown", (event) => {
       event.preventDefault();
@@ -106,6 +102,7 @@ class TaskMarkerWidget extends WidgetType {
     element.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
+      element.checked = checked;
       view.dispatch({
         changes: {
           from: this.from + 3,

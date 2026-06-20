@@ -12,24 +12,7 @@
 }
 
 .kh-task-marker-widget {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  width: 1.05em;
-  height: 1.05em;
-  margin-right: 0.35em;
-  border: 2px solid var(--checkbox-border-color, var(--text-faint));
-  border-radius: 4px;
-  color: var(--text-on-accent, #ffffff);
+  margin-inline-start: 0;
+  margin-inline-end: 0.35em;
   cursor: pointer;
-  vertical-align: -0.16em;
-}
-
-.kh-task-marker-widget-checked {
-  border-color: var(--checkbox-color, var(--interactive-accent));
-  background-color: var(--checkbox-color, var(--interactive-accent));
-  font-size: 0.85em;
-  font-weight: 700;
-  line-height: 1;
 }
