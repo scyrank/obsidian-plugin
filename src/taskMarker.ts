@@ -66,3 +66,12 @@ export function expandDeleteRangeForTaskMarker(
 
   return null;
 }
+
+export function isTaskMarkerSelected(
+  markerFrom: number,
+  markerTo: number,
+  selectionFrom: number,
+  selectionTo: number
+): boolean {
+  return selectionFrom !== selectionTo && rangesOverlap(selectionFrom, selectionTo, markerFrom, markerTo);
+}

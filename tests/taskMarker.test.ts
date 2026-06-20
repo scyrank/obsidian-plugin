@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { expandDeleteRangeForTaskMarker, findTaskMarkerRangeInLine } from "../src/taskMarker";
+import {
+  expandDeleteRangeForTaskMarker,
+  findTaskMarkerRangeInLine,
+  isTaskMarkerSelected,
+} from "../src/taskMarker";
 
 describe("findTaskMarkerRangeInLine", () => {
   it("recognizes unchecked and checked task markers", () => {
@@ -51,5 +55,20 @@ describe("expandDeleteRangeForTaskMarker", () => {
 
   it("ignores selections outside the marker", () => {
     expect(expandDeleteRangeForTaskMarker("- [ ] hello", 7, 11, "backward")).toBeNull();
+  });
+});
+
+describe("isTaskMarkerSelected", () => {
+  it("detects a selection that covers the marker", () => {
+    expect(isTaskMarkerSelected(0, 6, 0, 8)).toBe(true);
+    expect(isTaskMarkerSelected(0, 6, 3, 10)).toBe(true);
+  });
+
+  it("ignores selections that only cover body text", () => {
+    expect(isTaskMarkerSelected(0, 6, 7, 12)).toBe(false);
+  });
+
+  it("ignores an empty cursor", () => {
+    expect(isTaskMarkerSelected(0, 6, 3, 3)).toBe(false);
   });
 });

@@ -8,7 +8,11 @@ import {
   type ViewUpdate,
   WidgetType,
 } from "@codemirror/view";
-import { findTaskMarkerRangeInLine, type TaskMarkerState } from "./taskMarker";
+import {
+  findTaskMarkerRangeInLine,
+  isTaskMarkerSelected,
+  type TaskMarkerState,
+} from "./taskMarker";
 
 const IMPORTANT_MARKER = "%%kt-important%%";
 const IMPORTANT_MARKER_RE = /\s*%%kt-important%%\s*$/;
@@ -70,7 +74,8 @@ function rangesOverlap(leftFrom: number, leftTo: number, rightFrom: number, righ
 class TaskMarkerWidget extends WidgetType {
   constructor(
     private readonly state: TaskMarkerState,
-    private readonly from: number
+    private readonly from: number,
+    private readonly selected: boolean
   ) {
     super();
   }
@@ -79,30 +84,36 @@ class TaskMarkerWidget extends WidgetType {
     return (
       widget instanceof TaskMarkerWidget &&
       widget.state === this.state &&
-      widget.from === this.from
+      widget.from === this.from &&
+      widget.selected === this.selected
     );
   }
 
   override toDOM(view: EditorView): HTMLElement {
     const checked = this.state !== " ";
-    const element = document.createElement("input");
+    const wrapper = document.createElement("span");
+    const checkbox = document.createElement("input");
 
-    element.type = "checkbox";
-    element.className = "task-list-item-checkbox kh-task-marker-widget";
-    element.checked = checked;
-    element.tabIndex = -1;
-    element.setAttribute("aria-checked", checked ? "true" : "false");
-    element.title = checked ? "Mark as incomplete" : "Mark as complete";
+    wrapper.className = this.selected
+      ? "kh-task-marker-widget kh-task-marker-widget-selected"
+      : "kh-task-marker-widget";
 
-    element.addEventListener("mousedown", (event) => {
+    checkbox.type = "checkbox";
+    checkbox.className = "task-list-item-checkbox kh-task-marker-checkbox";
+    checkbox.checked = checked;
+    checkbox.tabIndex = -1;
+    checkbox.setAttribute("aria-checked", checked ? "true" : "false");
+    checkbox.title = checked ? "Mark as incomplete" : "Mark as complete";
+
+    wrapper.addEventListener("mousedown", (event) => {
       event.preventDefault();
       event.stopPropagation();
     });
 
-    element.addEventListener("click", (event) => {
+    wrapper.addEventListener("click", (event) => {
       event.preventDefault();
       event.stopPropagation();
-      element.checked = checked;
+      checkbox.checked = checked;
       view.dispatch({
         changes: {
           from: this.from + 3,
@@ -112,7 +123,8 @@ class TaskMarkerWidget extends WidgetType {
       });
     });
 
-    return element;
+    wrapper.appendChild(checkbox);
+    return wrapper;
   }
 
   override ignoreEvent(event: Event): boolean {
@@ -132,8 +144,11 @@ function buildEditorDecorations(view: EditorView): BuiltDecorations {
       const taskMarker = getTaskMarkerRange(line);
 
       if (taskMarker) {
+        const selected = view.state.selection.ranges.some((range) =>
+          isTaskMarkerSelected(taskMarker.from, taskMarker.to, range.from, range.to)
+        );
         const taskDecoration = Decoration.replace({
-          widget: new TaskMarkerWidget(taskMarker.state, taskMarker.from),
+          widget: new TaskMarkerWidget(taskMarker.state, taskMarker.from, selected),
         });
 
         decorationRanges.push(taskDecoration.range(taskMarker.from, taskMarker.to));
@@ -287,7 +302,7 @@ const editorDecorationPlugin = ViewPlugin.fromClass(
     }
 
     update(update: ViewUpdate): void {
-      if (update.docChanged || update.viewportChanged) {
+      if (update.docChanged || update.viewportChanged || update.selectionSet) {
         const builtDecorations = buildEditorDecorations(update.view);
         this.decorations = builtDecorations.decorations;
         this.atomicRanges = builtDecorations.atomicRanges;

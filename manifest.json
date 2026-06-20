@@ -1,7 +1,7 @@
 {
   "id": "khala-task-marker",
   "name": "Khala Task Marker",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "minAppVersion": "1.5.0",
   "description": "Enhanced task marker system with cyclic task states, important line highlight, and star marker.",
   "author": "hao zhang",
