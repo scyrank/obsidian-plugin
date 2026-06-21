@@ -13,6 +13,7 @@ import {
   isTaskMarkerSelected,
   type TaskMarkerState,
 } from "./taskMarker";
+import { extendCopyEndChForImportantMarker } from "./importantCopy";
 
 const IMPORTANT_MARKER = "%%kt-important%%";
 const IMPORTANT_MARKER_RE = /\s*%%kt-important%%\s*$/;
@@ -290,6 +291,25 @@ function deleteTaskMarkerRange(view: EditorView, direction: "backward" | "forwar
   return true;
 }
 
+function getSelectedPlainTextPreservingImportantMarkers(view: EditorView): string | null {
+  const parts: string[] = [];
+
+  for (const range of view.state.selection.ranges) {
+    if (range.empty) {
+      continue;
+    }
+
+    const toLine = view.state.doc.lineAt(range.to);
+    const toCh = range.to - toLine.from;
+    const extendedToCh = extendCopyEndChForImportantMarker(toLine.text, toCh);
+    const adjustedTo = extendedToCh === toCh ? range.to : toLine.from + extendedToCh;
+
+    parts.push(view.state.sliceDoc(range.from, adjustedTo));
+  }
+
+  return parts.length > 0 ? parts.join("\n") : null;
+}
+
 const editorDecorationPlugin = ViewPlugin.fromClass(
   class {
     decorations: DecorationSet;
@@ -320,6 +340,19 @@ const editorDecorationPlugin = ViewPlugin.fromClass(
 
 export const importantLineExtension = [
   editorDecorationPlugin,
+  EditorView.domEventHandlers({
+    copy: (event, view) => {
+      const text = getSelectedPlainTextPreservingImportantMarkers(view);
+
+      if (!text || !event.clipboardData) {
+        return false;
+      }
+
+      event.clipboardData.setData("text/plain", text);
+      event.preventDefault();
+      return true;
+    },
+  }),
   Prec.high(
     keymap.of([
       {
