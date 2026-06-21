@@ -27,3 +27,47 @@ export function extendCopyEndChForImportantMarker(line: string, toCh: number): n
 
   return toCh === marker.fromCh ? marker.toCh : toCh;
 }
+
+export function getImportantMarkerRightArrowTarget(
+  line: string,
+  lineFrom: number,
+  lineTo: number,
+  docLength: number,
+  position: number
+): number | null {
+  const marker = findImportantMarkerRangeInLine(line);
+
+  if (!marker) {
+    return null;
+  }
+
+  const markerFrom = lineFrom + marker.fromCh;
+  const markerTo = lineFrom + marker.toCh;
+
+  if (position >= markerFrom && position <= markerTo) {
+    return lineTo < docLength ? lineTo + 1 : lineTo;
+  }
+
+  return null;
+}
+
+export function getImportantMarkerLeftArrowTarget(
+  line: string,
+  lineFrom: number,
+  position: number
+): number | null {
+  const marker = findImportantMarkerRangeInLine(line);
+
+  if (!marker) {
+    return null;
+  }
+
+  const markerFrom = lineFrom + marker.fromCh;
+  const markerTo = lineFrom + marker.toCh;
+
+  if (position > markerFrom && position <= markerTo) {
+    return markerFrom;
+  }
+
+  return null;
+}

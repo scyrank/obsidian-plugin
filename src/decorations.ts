@@ -1,4 +1,10 @@
-import { Prec, RangeSet, RangeSetBuilder, type ChangeSpec } from "@codemirror/state";
+import {
+  EditorSelection,
+  Prec,
+  RangeSet,
+  RangeSetBuilder,
+  type ChangeSpec,
+} from "@codemirror/state";
 import {
   Decoration,
   type DecorationSet,
@@ -16,6 +22,8 @@ import {
 import {
   extendCopyEndChForImportantMarker,
   findImportantMarkerRangeInLine,
+  getImportantMarkerLeftArrowTarget,
+  getImportantMarkerRightArrowTarget,
 } from "./importantCopy";
 
 const IMPORTANT_MARKER = "%%kt-important%%";
@@ -351,6 +359,67 @@ function setClipboardText(event: ClipboardEvent, text: string | null): boolean {
   return true;
 }
 
+function moveCursorAcrossImportantMarker(
+  view: EditorView,
+  direction: "left" | "right"
+): boolean {
+  if (view.state.selection.ranges.length !== 1 || !view.state.selection.main.empty) {
+    return false;
+  }
+
+  const position = view.state.selection.main.head;
+  const line = view.state.doc.lineAt(position);
+
+  if (direction === "right") {
+    const target = getImportantMarkerRightArrowTarget(
+      line.text,
+      line.from,
+      line.to,
+      view.state.doc.length,
+      position
+    );
+
+    if (target !== null && target !== position) {
+      view.dispatch({
+        selection: EditorSelection.cursor(target),
+        scrollIntoView: true,
+      });
+      return true;
+    }
+
+    return false;
+  }
+
+  const currentLineTarget = getImportantMarkerLeftArrowTarget(line.text, line.from, position);
+
+  if (currentLineTarget !== null && currentLineTarget !== position) {
+    view.dispatch({
+      selection: EditorSelection.cursor(currentLineTarget),
+      scrollIntoView: true,
+    });
+    return true;
+  }
+
+  if (position === line.from && line.from > 0) {
+    const previousLine = view.state.doc.lineAt(line.from - 1);
+    const previousLineTarget = getImportantMarkerLeftArrowTarget(
+      previousLine.text,
+      previousLine.from,
+      previousLine.to
+    );
+
+    if (previousLineTarget !== null) {
+      view.dispatch({
+        selection: EditorSelection.cursor(previousLineTarget),
+        scrollIntoView: true,
+      });
+      return true;
+    }
+  }
+
+  return false;
+}
+
 const editorDecorationPlugin = ViewPlugin.fromClass(
   class {
     decorations: DecorationSet;
@@ -411,6 +480,14 @@ export const importantLineExtension = [
   }),
   Prec.high(
     keymap.of([
+      {
+        key: "ArrowRight",
+        run: (view) => moveCursorAcrossImportantMarker(view, "right"),
+      },
+      {
+        key: "ArrowLeft",
+        run: (view) => moveCursorAcrossImportantMarker(view, "left"),
+      },
       {
         key: "Backspace",
         run: (view) => deleteTaskMarkerRange(view, "backward"),
