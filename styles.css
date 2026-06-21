@@ -8,7 +8,10 @@
 }
 
 .kh-task-important-marker {
-  display: none;
+  color: transparent;
+  font-size: 0;
+  letter-spacing: 0;
+  white-space: nowrap;
 }
 
 .kh-task-marker-widget {
