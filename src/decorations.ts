@@ -13,7 +13,10 @@ import {
   isTaskMarkerSelected,
   type TaskMarkerState,
 } from "./taskMarker";
-import { extendCopyEndChForImportantMarker } from "./importantCopy";
+import {
+  extendCopyEndChForImportantMarker,
+  findImportantMarkerRangeInLine,
+} from "./importantCopy";
 
 const IMPORTANT_MARKER = "%%kt-important%%";
 const IMPORTANT_MARKER_RE = /\s*%%kt-important%%\s*$/;
@@ -171,12 +174,19 @@ function buildEditorDecorations(view: EditorView): BuiltDecorations {
             );
           }
 
-          decorationRanges.push(
-            Decoration.mark({ class: "kh-task-important-marker" }).range(
-              line.from + markerStart,
-              line.to
-            )
-          );
+          const importantMarkerDecoration = Decoration.mark({
+            class: "kh-task-important-marker",
+          });
+          decorationRanges.push(importantMarkerDecoration.range(line.from + markerStart, line.to));
+
+          const importantMarkerRange = findImportantMarkerRangeInLine(line.text);
+          if (importantMarkerRange) {
+            atomicRangeBuilder.add(
+              line.from + importantMarkerRange.fromCh,
+              line.from + importantMarkerRange.toCh,
+              importantMarkerDecoration
+            );
+          }
         }
       }
 

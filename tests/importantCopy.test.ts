@@ -1,5 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { extendCopyEndChForImportantMarker } from "../src/importantCopy";
+import {
+  extendCopyEndChForImportantMarker,
+  findImportantMarkerRangeInLine,
+} from "../src/importantCopy";
+
+describe("findImportantMarkerRangeInLine", () => {
+  it("finds a trailing important marker including leading whitespace", () => {
+    const line = "- [ ] task %%kt-important%%";
+
+    expect(findImportantMarkerRangeInLine(line)).toEqual({
+      fromCh: "- [ ] task".length,
+      toCh: line.length,
+    });
+  });
+
+  it("returns null when there is no trailing marker", () => {
+    expect(findImportantMarkerRangeInLine("- [ ] task")).toBeNull();
+  });
+});
 
 describe("extendCopyEndChForImportantMarker", () => {
   it("extends a single-line selection ending before the marker", () => {
