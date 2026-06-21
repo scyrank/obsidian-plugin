@@ -310,6 +310,37 @@ function getSelectedPlainTextPreservingImportantMarkers(view: EditorView): strin
   return parts.length > 0 ? parts.join("\n") : null;
 }
 
+function getSelectedRangesPreservingImportantMarkers(
+  view: EditorView
+): { from: number; to: number }[] {
+  const ranges: { from: number; to: number }[] = [];
+
+  for (const range of view.state.selection.ranges) {
+    if (range.empty) {
+      continue;
+    }
+
+    const toLine = view.state.doc.lineAt(range.to);
+    const toCh = range.to - toLine.from;
+    const extendedToCh = extendCopyEndChForImportantMarker(toLine.text, toCh);
+    const adjustedTo = extendedToCh === toCh ? range.to : toLine.from + extendedToCh;
+
+    ranges.push({ from: range.from, to: adjustedTo });
+  }
+
+  return ranges;
+}
+
+function setClipboardText(event: ClipboardEvent, text: string | null): boolean {
+  if (!text || !event.clipboardData) {
+    return false;
+  }
+
+  event.clipboardData.setData("text/plain", text);
+  event.preventDefault();
+  return true;
+}
+
 const editorDecorationPlugin = ViewPlugin.fromClass(
   class {
     decorations: DecorationSet;
@@ -344,12 +375,27 @@ export const importantLineExtension = [
     copy: (event, view) => {
       const text = getSelectedPlainTextPreservingImportantMarkers(view);
 
-      if (!text || !event.clipboardData) {
+      return setClipboardText(event, text);
+    },
+    cut: (event, view) => {
+      const text = getSelectedPlainTextPreservingImportantMarkers(view);
+
+      if (!setClipboardText(event, text)) {
         return false;
       }
 
-      event.clipboardData.setData("text/plain", text);
-      event.preventDefault();
+      const changes: ChangeSpec[] = mergeRanges(
+        getSelectedRangesPreservingImportantMarkers(view)
+      ).map((range) => ({
+        from: range.from,
+        to: range.to,
+        insert: "",
+      }));
+
+      if (changes.length > 0) {
+        view.dispatch({ changes });
+      }
+
       return true;
     },
   }),
