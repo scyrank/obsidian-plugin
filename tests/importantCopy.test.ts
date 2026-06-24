@@ -4,6 +4,7 @@ import {
   findImportantMarkerRangeInLine,
   getImportantMarkerLeftArrowTarget,
   getImportantMarkerRightArrowTarget,
+  getImportantMarkerEnterInsertPosition,
 } from "../src/importantCopy";
 
 describe("findImportantMarkerRangeInLine", () => {
@@ -76,5 +77,25 @@ describe("getImportantMarkerLeftArrowTarget", () => {
     const line = "task %%kt-important%%";
 
     expect(getImportantMarkerLeftArrowTarget(line, 0, 4)).toBeNull();
+  });
+});
+
+describe("getImportantMarkerEnterInsertPosition", () => {
+  it("inserts a newline after the marker from the visible line end", () => {
+    const line = "task %%kt-important%%";
+
+    expect(getImportantMarkerEnterInsertPosition(line, 0, 4)).toBe(line.length);
+  });
+
+  it("inserts a newline after the marker from the marker right boundary", () => {
+    const line = "task %%kt-important%%";
+
+    expect(getImportantMarkerEnterInsertPosition(line, 0, line.length)).toBe(line.length);
+  });
+
+  it("stays inactive outside the marker range", () => {
+    const line = "task %%kt-important%%";
+
+    expect(getImportantMarkerEnterInsertPosition(line, 0, 2)).toBeNull();
   });
 });

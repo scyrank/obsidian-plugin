@@ -21,6 +21,7 @@ import {
 } from "./taskMarker";
 import {
   extendCopyEndChForImportantMarker,
+  getImportantMarkerEnterInsertPosition,
   findImportantMarkerRangeInLine,
   getImportantMarkerLeftArrowTarget,
   getImportantMarkerRightArrowTarget,
@@ -420,6 +421,27 @@ function moveCursorAcrossImportantMarker(
   return false;
 }
 
+function insertNewlineAfterImportantMarker(view: EditorView): boolean {
+  if (view.state.selection.ranges.length !== 1 || !view.state.selection.main.empty) {
+    return false;
+  }
+
+  const position = view.state.selection.main.head;
+  const line = view.state.doc.lineAt(position);
+  const insertPosition = getImportantMarkerEnterInsertPosition(line.text, line.from, position);
+
+  if (insertPosition === null) {
+    return false;
+  }
+
+  view.dispatch({
+    changes: { from: insertPosition, to: insertPosition, insert: "\n" },
+    selection: EditorSelection.cursor(insertPosition + 1),
+    scrollIntoView: true,
+  });
+  return true;
+}
+
 const editorDecorationPlugin = ViewPlugin.fromClass(
   class {
     decorations: DecorationSet;
@@ -480,6 +502,10 @@ export const importantLineExtension = [
   }),
   Prec.high(
     keymap.of([
+      {
+        key: "Enter",
+        run: insertNewlineAfterImportantMarker,
+      },
       {
         key: "ArrowRight",
         run: (view) => moveCursorAcrossImportantMarker(view, "right"),

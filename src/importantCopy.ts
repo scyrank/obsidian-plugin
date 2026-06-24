@@ -71,3 +71,24 @@ export function getImportantMarkerLeftArrowTarget(
 
   return null;
 }
+
+export function getImportantMarkerEnterInsertPosition(
+  line: string,
+  lineFrom: number,
+  position: number
+): number | null {
+  const marker = findImportantMarkerRangeInLine(line);
+
+  if (!marker) {
+    return null;
+  }
+
+  const markerFrom = lineFrom + marker.fromCh;
+  const markerTo = lineFrom + marker.toCh;
+
+  if (position >= markerFrom && position <= markerTo) {
+    return markerTo;
+  }
+
+  return null;
+}
