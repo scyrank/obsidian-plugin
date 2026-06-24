@@ -16,6 +16,7 @@ import {
 } from "@codemirror/view";
 import {
   findTaskMarkerRangeInLine,
+  getContinuationTaskPrefix,
   isTaskMarkerSelected,
   type TaskMarkerState,
 } from "./taskMarker";
@@ -434,9 +435,12 @@ function insertNewlineAfterImportantMarker(view: EditorView): boolean {
     return false;
   }
 
+  const continuationPrefix = getContinuationTaskPrefix(line.text) ?? "";
+  const insertText = `\n${continuationPrefix}`;
+
   view.dispatch({
-    changes: { from: insertPosition, to: insertPosition, insert: "\n" },
-    selection: EditorSelection.cursor(insertPosition + 1),
+    changes: { from: insertPosition, to: insertPosition, insert: insertText },
+    selection: EditorSelection.cursor(insertPosition + insertText.length),
     scrollIntoView: true,
   });
   return true;

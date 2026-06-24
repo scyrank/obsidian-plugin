@@ -24,6 +24,16 @@ export function findTaskMarkerRangeInLine(line: string): TaskMarkerRange | null 
   };
 }
 
+export function getContinuationTaskPrefix(line: string): string | null {
+  const match = line.match(TASK_MARKER_RE);
+
+  if (!match) {
+    return null;
+  }
+
+  return `${match[1]}- [ ] `;
+}
+
 function rangesOverlap(
   leftFrom: number,
   leftTo: number,

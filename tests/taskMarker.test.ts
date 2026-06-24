@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   expandDeleteRangeForTaskMarker,
   findTaskMarkerRangeInLine,
+  getContinuationTaskPrefix,
   isTaskMarkerSelected,
 } from "../src/taskMarker";
 
@@ -55,6 +56,17 @@ describe("expandDeleteRangeForTaskMarker", () => {
 
   it("ignores selections outside the marker", () => {
     expect(expandDeleteRangeForTaskMarker("- [ ] hello", 7, 11, "backward")).toBeNull();
+  });
+});
+
+describe("getContinuationTaskPrefix", () => {
+  it("creates an unchecked continuation task with the same indentation", () => {
+    expect(getContinuationTaskPrefix("- [ ] hello")).toBe("- [ ] ");
+    expect(getContinuationTaskPrefix("  - [x] hello")).toBe("  - [ ] ");
+  });
+
+  it("ignores ordinary paragraphs", () => {
+    expect(getContinuationTaskPrefix("hello")).toBeNull();
   });
 });
 
