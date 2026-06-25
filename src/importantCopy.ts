@@ -5,6 +5,11 @@ export type ImportantMarkerRange = {
   toCh: number;
 };
 
+export type ImportantMarkerOnlyLineRange = {
+  from: number;
+  to: number;
+};
+
 export function findImportantMarkerRangeInLine(line: string): ImportantMarkerRange | null {
   const match = line.match(IMPORTANT_MARKER_RE);
 
@@ -22,6 +27,23 @@ export function isImportantMarkerOnlyLine(line: string): boolean {
   const marker = findImportantMarkerRangeInLine(line);
 
   return marker !== null && line.slice(0, marker.fromCh).trim().length === 0;
+}
+
+export function findImportantMarkerOnlyLineRanges(text: string): ImportantMarkerOnlyLineRange[] {
+  const ranges: ImportantMarkerOnlyLineRange[] = [];
+  let lineStart = 0;
+
+  for (const line of text.split("\n")) {
+    const lineEnd = lineStart + line.length;
+
+    if (isImportantMarkerOnlyLine(line)) {
+      ranges.push({ from: lineStart, to: lineEnd });
+    }
+
+    lineStart = lineEnd + 1;
+  }
+
+  return ranges;
 }
 
 export function extendCopyEndChForImportantMarker(line: string, toCh: number): number {

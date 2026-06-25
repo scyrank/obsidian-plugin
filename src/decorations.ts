@@ -1,9 +1,12 @@
 import {
+  EditorState,
   EditorSelection,
   Prec,
   RangeSet,
   RangeSetBuilder,
   type ChangeSpec,
+  type Transaction,
+  type TransactionSpec,
 } from "@codemirror/state";
 import {
   Decoration,
@@ -23,6 +26,7 @@ import {
 import {
   extendCopyEndChForImportantMarker,
   getImportantMarkerEnterInsertPosition,
+  findImportantMarkerOnlyLineRanges,
   findImportantMarkerRangeInLine,
   getImportantMarkerLeftArrowTarget,
   getImportantMarkerRightArrowTarget,
@@ -212,7 +216,7 @@ function buildEditorDecorations(view: EditorView): BuiltDecorations {
   };
 }
 
-function removeMarkerOnlyLines(view: EditorView): boolean {
+function getVisibleMarkerOnlyLineCleanupChanges(view: EditorView): ChangeSpec[] {
   const changes: ChangeSpec[] = [];
 
   for (const { from, to } of view.visibleRanges) {
@@ -229,12 +233,45 @@ function removeMarkerOnlyLines(view: EditorView): boolean {
     }
   }
 
+  return changes;
+}
+
+function cleanupVisibleMarkerOnlyLines(view: EditorView): boolean {
+  const changes = getVisibleMarkerOnlyLineCleanupChanges(view);
+
   if (changes.length === 0) {
     return false;
   }
 
-  view.dispatch({ changes });
+  view.dispatch({ changes, filter: false });
   return true;
+}
+
+function cleanupStandaloneImportantMarkerLines(
+  transaction: Transaction
+): TransactionSpec | readonly TransactionSpec[] {
+  if (!transaction.docChanged) {
+    return transaction;
+  }
+
+  const changes = findImportantMarkerOnlyLineRanges(transaction.newDoc.toString()).map((range) => ({
+    from: range.from,
+    to: range.to,
+    insert: "",
+  }));
+
+  if (changes.length === 0) {
+    return transaction;
+  }
+
+  return [
+    transaction,
+    {
+      changes,
+      sequential: true,
+      filter: false,
+    },
+  ];
 }
 
 function getCollapsedTaskMarkerDeleteRange(
@@ -492,23 +529,37 @@ const editorDecorationPlugin = ViewPlugin.fromClass(
   class {
     decorations: DecorationSet;
     atomicRanges: RangeSet<Decoration>;
+    private markerCleanupQueued = false;
 
     constructor(view: EditorView) {
       const builtDecorations = buildEditorDecorations(view);
       this.decorations = builtDecorations.decorations;
       this.atomicRanges = builtDecorations.atomicRanges;
+      this.queueMarkerOnlyLineCleanup(view);
     }
 
     update(update: ViewUpdate): void {
       if (update.docChanged || update.viewportChanged || update.selectionSet) {
-        if (removeMarkerOnlyLines(update.view)) {
-          return;
+        if (update.docChanged || update.viewportChanged) {
+          this.queueMarkerOnlyLineCleanup(update.view);
         }
 
         const builtDecorations = buildEditorDecorations(update.view);
         this.decorations = builtDecorations.decorations;
         this.atomicRanges = builtDecorations.atomicRanges;
       }
+    }
+
+    private queueMarkerOnlyLineCleanup(view: EditorView): void {
+      if (this.markerCleanupQueued) {
+        return;
+      }
+
+      this.markerCleanupQueued = true;
+      window.setTimeout(() => {
+        this.markerCleanupQueued = false;
+        cleanupVisibleMarkerOnlyLines(view);
+      }, 0);
     }
   },
   {
@@ -521,6 +572,7 @@ const editorDecorationPlugin = ViewPlugin.fromClass(
 );
 
 export const importantLineExtension = [
+  EditorState.transactionFilter.of(cleanupStandaloneImportantMarkerLines),
   editorDecorationPlugin,
   EditorView.domEventHandlers({
     copy: (event, view) => {

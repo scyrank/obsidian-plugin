@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   extendCopyEndChForImportantMarker,
+  findImportantMarkerOnlyLineRanges,
   findImportantMarkerRangeInLine,
   getImportantMarkerLeftArrowTarget,
   getImportantMarkerRightArrowTarget,
@@ -33,6 +34,20 @@ describe("isImportantMarkerOnlyLine", () => {
   it("ignores lines with visible content", () => {
     expect(isImportantMarkerOnlyLine("hello %%kt-important%%")).toBe(false);
     expect(isImportantMarkerOnlyLine("hello")).toBe(false);
+  });
+});
+
+describe("findImportantMarkerOnlyLineRanges", () => {
+  it("returns ranges for standalone important markers", () => {
+    expect(findImportantMarkerOnlyLineRanges("a\n%%kt-important%%\nb")).toEqual([
+      { from: 2, to: 18 },
+    ]);
+  });
+
+  it("keeps content lines with important markers", () => {
+    expect(findImportantMarkerOnlyLineRanges("a %%kt-important%%\n  %%kt-important%%")).toEqual([
+      { from: 19, to: 37 },
+    ]);
   });
 });
 
