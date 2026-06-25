@@ -39,6 +39,7 @@ const IMPORTANT_MARKER_RE = /\s*%%kt-important%%\s*$/;
 const TASK_PREFIX_RE = /^(\s*)- \[[ xX]\]\s+/;
 const INDENT_RE = /^\s*/;
 const STAR_PREFIX_RE = /^⭐\s+/;
+const DELEGATED_PREFIX_RE = /^📤\s+/;
 
 type AbsoluteTaskMarkerRange = {
   from: number;
@@ -61,13 +62,25 @@ function getImportantMarkerStart(text: string): number | null {
   return match.index;
 }
 
-function getHighlightStart(text: string): number {
+export function getHighlightStart(text: string): number {
   const taskMatch = text.match(TASK_PREFIX_RE);
   let start = taskMatch ? taskMatch[0].length : text.match(INDENT_RE)?.[0].length ?? 0;
-  const starMatch = text.slice(start).match(STAR_PREFIX_RE);
+  let changed = true;
 
-  if (starMatch) {
-    start += starMatch[0].length;
+  while (changed) {
+    changed = false;
+
+    const starMatch = text.slice(start).match(STAR_PREFIX_RE);
+    if (starMatch) {
+      start += starMatch[0].length;
+      changed = true;
+    }
+
+    const delegatedMatch = text.slice(start).match(DELEGATED_PREFIX_RE);
+    if (delegatedMatch) {
+      start += delegatedMatch[0].length;
+      changed = true;
+    }
   }
 
   return start;

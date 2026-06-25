@@ -3,6 +3,7 @@ const PLAIN_LINE_RE = /^(\s*)(.*)$/;
 const IMPORTANT_MARKER = "%%kt-important%%";
 const IMPORTANT_MARKER_RE = /\s*%%kt-important%%\s*$/;
 const STAR_RE = /^⭐\s+/;
+const DELEGATED_RE = /^📤\s+/;
 
 type ParsedTaskLine = {
   indent: string;
@@ -13,6 +14,16 @@ type ParsedTaskLine = {
 type ImportantSplit = {
   content: string;
   importantSuffix: string;
+};
+
+type BodyMarkers = {
+  star: boolean;
+  delegated: boolean;
+};
+
+type BodyMarkerSplit = {
+  markers: BodyMarkers;
+  content: string;
 };
 
 function parseTaskLine(line: string): ParsedTaskLine | null {
@@ -48,14 +59,53 @@ function splitImportant(body: string): ImportantSplit {
   };
 }
 
-function toggleStarInBody(body: string): string {
-  const { content, importantSuffix } = splitImportant(body);
+function splitBodyMarkers(body: string): BodyMarkerSplit {
+  const markers = {
+    star: false,
+    delegated: false,
+  };
+  let content = body;
+  let changed = true;
 
-  if (STAR_RE.test(content)) {
-    return `${content.replace(STAR_RE, "")}${importantSuffix}`;
+  while (changed) {
+    changed = false;
+
+    if (STAR_RE.test(content)) {
+      markers.star = true;
+      content = content.replace(STAR_RE, "");
+      changed = true;
+    }
+
+    if (DELEGATED_RE.test(content)) {
+      markers.delegated = true;
+      content = content.replace(DELEGATED_RE, "");
+      changed = true;
+    }
   }
 
-  return `⭐ ${content}${importantSuffix}`;
+  return { markers, content };
+}
+
+function formatBodyWithMarkers(content: string, markers: BodyMarkers, importantSuffix: string): string {
+  const markerPrefix = `${markers.star ? "⭐ " : ""}${markers.delegated ? "📤 " : ""}`;
+
+  return `${markerPrefix}${content}${importantSuffix}`;
+}
+
+function toggleStarInBody(body: string): string {
+  const { content, importantSuffix } = splitImportant(body);
+  const bodyMarkers = splitBodyMarkers(content);
+
+  bodyMarkers.markers.star = !bodyMarkers.markers.star;
+  return formatBodyWithMarkers(bodyMarkers.content, bodyMarkers.markers, importantSuffix);
+}
+
+function toggleDelegatedInBody(body: string): string {
+  const { content, importantSuffix } = splitImportant(body);
+  const bodyMarkers = splitBodyMarkers(content);
+
+  bodyMarkers.markers.delegated = !bodyMarkers.markers.delegated;
+  return formatBodyWithMarkers(bodyMarkers.content, bodyMarkers.markers, importantSuffix);
 }
 
 export function cycleTaskState(line: string): string {
@@ -90,4 +140,15 @@ export function toggleStar(line: string): string {
 
   const { indent, body } = parsePlainLine(line);
   return `${indent}${toggleStarInBody(body)}`;
+}
+
+export function toggleDelegated(line: string): string {
+  const task = parseTaskLine(line);
+
+  if (task) {
+    return `${task.indent}- [${task.state}] ${toggleDelegatedInBody(task.body)}`;
+  }
+
+  const { indent, body } = parsePlainLine(line);
+  return `${indent}${toggleDelegatedInBody(body)}`;
 }

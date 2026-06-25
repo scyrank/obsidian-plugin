@@ -1,6 +1,6 @@
 import { Plugin } from "obsidian";
 import { applyToSelectedLines } from "./editorCommands";
-import { cycleTaskState, toggleImportant, toggleStar } from "./lineTransform";
+import { cycleTaskState, toggleDelegated, toggleImportant, toggleStar } from "./lineTransform";
 
 export default class KhalaTaskMarkerPlugin extends Plugin {
   override async onload(): Promise<void> {
@@ -28,6 +28,15 @@ export default class KhalaTaskMarkerPlugin extends Plugin {
       hotkeys: [{ modifiers: ["Mod", "Alt"], key: "S" }],
       editorCallback: (editor) => {
         applyToSelectedLines(editor, toggleStar);
+      },
+    });
+
+    this.addCommand({
+      id: "toggle-delegated",
+      name: "Toggle delegated",
+      hotkeys: [{ modifiers: ["Alt"], key: "4" }],
+      editorCallback: (editor) => {
+        applyToSelectedLines(editor, toggleDelegated);
       },
     });
 

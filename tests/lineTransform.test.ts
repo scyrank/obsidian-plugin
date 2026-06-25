@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { cycleTaskState, toggleImportant, toggleStar } from "../src/lineTransform";
+import {
+  cycleTaskState,
+  toggleDelegated,
+  toggleImportant,
+  toggleStar,
+} from "../src/lineTransform";
 
 describe("cycleTaskState", () => {
   it("cycles plain, unchecked, checked, and plain again", () => {
@@ -51,8 +56,44 @@ describe("toggleStar", () => {
     expect(toggleStar("- [x] ⭐ hello %%kt-important%%")).toBe("- [x] hello %%kt-important%%");
   });
 
+  it("keeps delegated markers after star markers", () => {
+    expect(toggleStar("- [ ] 📤 hello")).toBe("- [ ] ⭐ 📤 hello");
+    expect(toggleStar("- [ ] 📤 ⭐ hello")).toBe("- [ ] 📤 hello");
+  });
+
   it("preserves indentation", () => {
     expect(toggleStar("  hello")).toBe("  ⭐ hello");
     expect(toggleStar("  - [ ] hello")).toBe("  - [ ] ⭐ hello");
+  });
+});
+
+describe("toggleDelegated", () => {
+  it("adds and removes delegated markers on plain lines", () => {
+    expect(toggleDelegated("hello")).toBe("📤 hello");
+    expect(toggleDelegated("📤 hello")).toBe("hello");
+  });
+
+  it("adds and removes delegated markers after checkbox on task lines", () => {
+    expect(toggleDelegated("- [ ] hello")).toBe("- [ ] 📤 hello");
+    expect(toggleDelegated("- [ ] 📤 hello")).toBe("- [ ] hello");
+  });
+
+  it("preserves important markers", () => {
+    expect(toggleDelegated("- [x] hello %%kt-important%%")).toBe(
+      "- [x] 📤 hello %%kt-important%%"
+    );
+    expect(toggleDelegated("- [x] 📤 hello %%kt-important%%")).toBe(
+      "- [x] hello %%kt-important%%"
+    );
+  });
+
+  it("preserves indentation and task state", () => {
+    expect(toggleDelegated("  hello")).toBe("  📤 hello");
+    expect(toggleDelegated("  - [x] hello")).toBe("  - [x] 📤 hello");
+  });
+
+  it("normalizes star before delegated when both are present", () => {
+    expect(toggleDelegated("⭐ hello")).toBe("⭐ 📤 hello");
+    expect(toggleDelegated("📤 ⭐ hello")).toBe("⭐ hello");
   });
 });

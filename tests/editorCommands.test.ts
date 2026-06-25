@@ -17,6 +17,11 @@ describe("mapCursorChAfterLineTransform", () => {
     expect(mapCursorChAfterLineTransform("- [ ] ⭐ hello", "- [ ] hello", 10)).toBe(8);
   });
 
+  it("keeps the cursor attached to body text when toggling a delegated marker", () => {
+    expect(mapCursorChAfterLineTransform("- [ ] hello", "- [ ] 📤 hello", 8)).toBe(11);
+    expect(mapCursorChAfterLineTransform("- [ ] 📤 hello", "- [ ] hello", 11)).toBe(8);
+  });
+
   it("does not move the cursor when appending an important marker", () => {
     expect(mapCursorChAfterLineTransform("hello", "hello %%kt-important%%", 2)).toBe(2);
     expect(mapCursorChAfterLineTransform("hello", "hello %%kt-important%%", 5)).toBe(5);
