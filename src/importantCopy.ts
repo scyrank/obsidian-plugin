@@ -92,3 +92,26 @@ export function getImportantMarkerEnterInsertPosition(
 
   return null;
 }
+
+export type ImportantLineSplit = {
+  before: string;
+  marker: string;
+  after: string;
+};
+
+export function splitLineKeepingImportantMarkerAbove(
+  line: string,
+  splitCh: number
+): ImportantLineSplit | null {
+  const marker = findImportantMarkerRangeInLine(line);
+
+  if (!marker || splitCh < 0 || splitCh > marker.fromCh) {
+    return null;
+  }
+
+  return {
+    before: line.slice(0, splitCh).trimEnd(),
+    marker: line.slice(marker.fromCh),
+    after: line.slice(splitCh, marker.fromCh).trimStart(),
+  };
+}

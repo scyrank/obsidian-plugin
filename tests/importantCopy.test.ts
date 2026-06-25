@@ -5,6 +5,7 @@ import {
   getImportantMarkerLeftArrowTarget,
   getImportantMarkerRightArrowTarget,
   getImportantMarkerEnterInsertPosition,
+  splitLineKeepingImportantMarkerAbove,
 } from "../src/importantCopy";
 
 describe("findImportantMarkerRangeInLine", () => {
@@ -97,5 +98,28 @@ describe("getImportantMarkerEnterInsertPosition", () => {
     const line = "task %%kt-important%%";
 
     expect(getImportantMarkerEnterInsertPosition(line, 0, 2)).toBeNull();
+  });
+});
+
+describe("splitLineKeepingImportantMarkerAbove", () => {
+  it("keeps the important marker on the upper split line", () => {
+    expect(splitLineKeepingImportantMarkerAbove("- [ ] hello world %%kt-important%%", 12)).toEqual({
+      before: "- [ ] hello",
+      marker: " %%kt-important%%",
+      after: "world",
+    });
+  });
+
+  it("supports splitting at the visible line end", () => {
+    expect(splitLineKeepingImportantMarkerAbove("hello %%kt-important%%", 5)).toEqual({
+      before: "hello",
+      marker: " %%kt-important%%",
+      after: "",
+    });
+  });
+
+  it("returns null without a marker or inside the marker", () => {
+    expect(splitLineKeepingImportantMarkerAbove("hello", 2)).toBeNull();
+    expect(splitLineKeepingImportantMarkerAbove("hello %%kt-important%%", 8)).toBeNull();
   });
 });

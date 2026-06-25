@@ -26,6 +26,7 @@ import {
   findImportantMarkerRangeInLine,
   getImportantMarkerLeftArrowTarget,
   getImportantMarkerRightArrowTarget,
+  splitLineKeepingImportantMarkerAbove,
 } from "./importantCopy";
 
 const IMPORTANT_MARKER = "%%kt-important%%";
@@ -429,13 +430,28 @@ function insertNewlineAfterImportantMarker(view: EditorView): boolean {
 
   const position = view.state.selection.main.head;
   const line = view.state.doc.lineAt(position);
+  const splitCh = position - line.from;
+  const split = splitLineKeepingImportantMarkerAbove(line.text, splitCh);
+  const continuationPrefix = getContinuationTaskPrefix(line.text) ?? "";
+
+  if (split && continuationPrefix) {
+    const replacement = `${split.before}${split.marker}\n${continuationPrefix}${split.after}`;
+    const selectionPosition = line.from + split.before.length + split.marker.length + 1 + continuationPrefix.length;
+
+    view.dispatch({
+      changes: { from: line.from, to: line.to, insert: replacement },
+      selection: EditorSelection.cursor(selectionPosition),
+      scrollIntoView: true,
+    });
+    return true;
+  }
+
   const insertPosition = getImportantMarkerEnterInsertPosition(line.text, line.from, position);
 
   if (insertPosition === null) {
     return false;
   }
 
-  const continuationPrefix = getContinuationTaskPrefix(line.text) ?? "";
   const insertText = `\n${continuationPrefix}`;
 
   view.dispatch({
