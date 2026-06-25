@@ -18,6 +18,12 @@ export function findImportantMarkerRangeInLine(line: string): ImportantMarkerRan
   };
 }
 
+export function isImportantMarkerOnlyLine(line: string): boolean {
+  const marker = findImportantMarkerRangeInLine(line);
+
+  return marker !== null && line.slice(0, marker.fromCh).trim().length === 0;
+}
+
 export function extendCopyEndChForImportantMarker(line: string, toCh: number): number {
   const marker = findImportantMarkerRangeInLine(line);
 

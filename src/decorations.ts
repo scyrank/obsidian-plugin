@@ -26,6 +26,7 @@ import {
   findImportantMarkerRangeInLine,
   getImportantMarkerLeftArrowTarget,
   getImportantMarkerRightArrowTarget,
+  isImportantMarkerOnlyLine,
   splitLineKeepingImportantMarkerAbove,
 } from "./importantCopy";
 
@@ -209,6 +210,31 @@ function buildEditorDecorations(view: EditorView): BuiltDecorations {
     decorations: Decoration.set(decorationRanges, true),
     atomicRanges: atomicRangeBuilder.finish(),
   };
+}
+
+function removeMarkerOnlyLines(view: EditorView): boolean {
+  const changes: ChangeSpec[] = [];
+
+  for (const { from, to } of view.visibleRanges) {
+    let position = from;
+
+    while (position <= to) {
+      const line = view.state.doc.lineAt(position);
+
+      if (isImportantMarkerOnlyLine(line.text)) {
+        changes.push({ from: line.from, to: line.to, insert: "" });
+      }
+
+      position = line.to + 1;
+    }
+  }
+
+  if (changes.length === 0) {
+    return false;
+  }
+
+  view.dispatch({ changes });
+  return true;
 }
 
 function getCollapsedTaskMarkerDeleteRange(
@@ -475,6 +501,10 @@ const editorDecorationPlugin = ViewPlugin.fromClass(
 
     update(update: ViewUpdate): void {
       if (update.docChanged || update.viewportChanged || update.selectionSet) {
+        if (removeMarkerOnlyLines(update.view)) {
+          return;
+        }
+
         const builtDecorations = buildEditorDecorations(update.view);
         this.decorations = builtDecorations.decorations;
         this.atomicRanges = builtDecorations.atomicRanges;
