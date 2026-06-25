@@ -24,6 +24,7 @@ import {
   extendCopyEndChForImportantMarker,
   getImportantMarkerEnterInsertPosition,
   findImportantMarkerRangeInLine,
+  isImportantMarkerOnlyLine,
   getImportantMarkerLeftArrowTarget,
   getImportantMarkerRightArrowTarget,
   splitLineKeepingImportantMarkerAbove,
@@ -192,11 +193,13 @@ function buildEditorDecorations(view: EditorView): BuiltDecorations {
 
           const importantMarkerRange = findImportantMarkerRangeInLine(line.text);
           if (importantMarkerRange) {
-            atomicRangeBuilder.add(
-              line.from + importantMarkerRange.fromCh,
-              line.from + importantMarkerRange.toCh,
-              importantMarkerDecoration
-            );
+            if (!isImportantMarkerOnlyLine(line.text)) {
+              atomicRangeBuilder.add(
+                line.from + importantMarkerRange.fromCh,
+                line.from + importantMarkerRange.toCh,
+                importantMarkerDecoration
+              );
+            }
           }
         }
       }
