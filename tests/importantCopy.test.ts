@@ -5,7 +5,6 @@ import {
   getImportantMarkerLeftArrowTarget,
   getImportantMarkerRightArrowTarget,
   getImportantMarkerEnterInsertPosition,
-  isImportantMarkerOnlyLine,
   splitLineKeepingImportantMarkerAbove,
 } from "../src/importantCopy";
 
@@ -21,18 +20,6 @@ describe("findImportantMarkerRangeInLine", () => {
 
   it("returns null when there is no trailing marker", () => {
     expect(findImportantMarkerRangeInLine("- [ ] task")).toBeNull();
-  });
-});
-
-describe("isImportantMarkerOnlyLine", () => {
-  it("detects lines that only contain the important marker", () => {
-    expect(isImportantMarkerOnlyLine("%%kt-important%%")).toBe(true);
-    expect(isImportantMarkerOnlyLine("   %%kt-important%%")).toBe(true);
-  });
-
-  it("ignores lines with visible content", () => {
-    expect(isImportantMarkerOnlyLine("hello %%kt-important%%")).toBe(false);
-    expect(isImportantMarkerOnlyLine("hello")).toBe(false);
   });
 });
 
