@@ -7,7 +7,10 @@ export default class KhalaTaskMarkerPlugin extends Plugin {
     this.addCommand({
       id: "cycle-task-state",
       name: "Cycle task state",
-      hotkeys: [{ modifiers: ["Mod", "Alt"], key: "T" }],
+      hotkeys: [
+        { modifiers: ["Alt"], key: "1" },
+        { modifiers: ["Mod", "Alt"], key: "T" },
+      ],
       editorCallback: (editor) => {
         applyToSelectedLines(editor, cycleTaskState);
       },
@@ -16,7 +19,10 @@ export default class KhalaTaskMarkerPlugin extends Plugin {
     this.addCommand({
       id: "toggle-important",
       name: "Toggle important",
-      hotkeys: [{ modifiers: ["Mod", "Alt"], key: "H" }],
+      hotkeys: [
+        { modifiers: ["Alt"], key: "2" },
+        { modifiers: ["Mod", "Alt"], key: "H" },
+      ],
       editorCallback: (editor) => {
         applyToSelectedLines(editor, toggleImportant);
       },
@@ -25,7 +31,10 @@ export default class KhalaTaskMarkerPlugin extends Plugin {
     this.addCommand({
       id: "toggle-star",
       name: "Toggle star",
-      hotkeys: [{ modifiers: ["Mod", "Alt"], key: "S" }],
+      hotkeys: [
+        { modifiers: ["Alt"], key: "3" },
+        { modifiers: ["Mod", "Alt"], key: "S" },
+      ],
       editorCallback: (editor) => {
         applyToSelectedLines(editor, toggleStar);
       },
@@ -34,7 +43,10 @@ export default class KhalaTaskMarkerPlugin extends Plugin {
     this.addCommand({
       id: "toggle-delegated",
       name: "Toggle delegated",
-      hotkeys: [{ modifiers: ["Alt"], key: "4" }],
+      hotkeys: [
+        { modifiers: ["Alt"], key: "4" },
+        { modifiers: ["Mod", "Alt"], key: "D" },
+      ],
       editorCallback: (editor) => {
         applyToSelectedLines(editor, toggleDelegated);
       },

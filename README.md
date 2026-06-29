@@ -21,14 +21,14 @@ Important paragraph %%kt-important%%
 
 ## Commands
 
-| Command | Default hotkey | Behavior |
-|---|---|---|
-| Khala Task Marker: Cycle task state | `Mod + Alt + T` | Plain line -> unchecked task -> checked task -> plain line |
-| Khala Task Marker: Toggle important | `Mod + Alt + H` | Adds or removes the trailing `%%kt-important%%` marker |
-| Khala Task Marker: Toggle star | `Mod + Alt + S` | Adds or removes `⭐` at the start of the line body |
-| Khala Task Marker: Toggle delegated | `Alt + 4` | Adds or removes `📤` at the start of the line body, after `⭐` when both exist |
+| Command | Default hotkey 1 | Default hotkey 2 | Behavior |
+|---|---|---|---|
+| Khala Task Marker: Cycle task state | `Alt + 1` | `Mod + Alt + T` | Plain line -> unchecked task -> checked task -> plain line |
+| Khala Task Marker: Toggle important | `Alt + 2` | `Mod + Alt + H` | Adds or removes the trailing `%%kt-important%%` marker |
+| Khala Task Marker: Toggle star | `Alt + 3` | `Mod + Alt + S` | Adds or removes `⭐` at the start of the line body |
+| Khala Task Marker: Toggle delegated | `Alt + 4` | `Mod + Alt + D` | Adds or removes `📤` at the start of the line body, after `⭐` when both exist |
 
-All commands work on the current line or the selected full-line range. Empty lines are skipped.
+All commands work on the current line or the selected full-line range. Empty lines are skipped. `Mod` maps to `Ctrl` on Windows and Linux, and `Cmd` on macOS.
 
 ## Examples
 
