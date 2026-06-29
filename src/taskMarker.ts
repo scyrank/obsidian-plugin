@@ -6,9 +6,16 @@ export type TaskMarkerRange = {
   state: TaskMarkerState;
 };
 
+export type RepeatedTaskMarkerPrefixRange = {
+  from: number;
+  to: number;
+};
+
 export type DeleteDirection = "backward" | "forward";
 
 const TASK_MARKER_RE = /^(\s*)- \[([ xX])\]\s+/;
+const INDENT_RE = /^\s*/;
+const TASK_MARKER_WITHOUT_INDENT_RE = /^- \[([ xX])\]\s+/;
 
 export function findTaskMarkerRangeInLine(line: string): TaskMarkerRange | null {
   const match = line.match(TASK_MARKER_RE);
@@ -32,6 +39,58 @@ export function getContinuationTaskPrefix(line: string): string | null {
   }
 
   return `${match[1]}- [ ] `;
+}
+
+export function findRepeatedTaskMarkerPrefixRangeInLine(
+  line: string
+): { fromCh: number; toCh: number } | null {
+  const indentLength = line.match(INDENT_RE)?.[0].length ?? 0;
+  let position = indentLength;
+  let markerCount = 0;
+  let lastMarkerFromCh = indentLength;
+
+  while (position < line.length) {
+    const match = line.slice(position).match(TASK_MARKER_WITHOUT_INDENT_RE);
+
+    if (!match) {
+      break;
+    }
+
+    markerCount += 1;
+    lastMarkerFromCh = position;
+    position += match[0].length;
+  }
+
+  if (markerCount < 2) {
+    return null;
+  }
+
+  return {
+    fromCh: indentLength,
+    toCh: lastMarkerFromCh,
+  };
+}
+
+export function findRepeatedTaskMarkerPrefixRanges(
+  text: string
+): RepeatedTaskMarkerPrefixRange[] {
+  const ranges: RepeatedTaskMarkerPrefixRange[] = [];
+  let lineStart = 0;
+
+  for (const line of text.split("\n")) {
+    const repeatedPrefix = findRepeatedTaskMarkerPrefixRangeInLine(line);
+
+    if (repeatedPrefix && repeatedPrefix.fromCh < repeatedPrefix.toCh) {
+      ranges.push({
+        from: lineStart + repeatedPrefix.fromCh,
+        to: lineStart + repeatedPrefix.toCh,
+      });
+    }
+
+    lineStart += line.length + 1;
+  }
+
+  return ranges;
 }
 
 function rangesOverlap(

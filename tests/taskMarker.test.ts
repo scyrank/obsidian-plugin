@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   expandDeleteRangeForTaskMarker,
+  findRepeatedTaskMarkerPrefixRangeInLine,
+  findRepeatedTaskMarkerPrefixRanges,
   findTaskMarkerRangeInLine,
   getContinuationTaskPrefix,
   isTaskMarkerSelected,
@@ -67,6 +69,48 @@ describe("getContinuationTaskPrefix", () => {
 
   it("ignores ordinary paragraphs", () => {
     expect(getContinuationTaskPrefix("hello")).toBeNull();
+  });
+});
+
+describe("findRepeatedTaskMarkerPrefixRangeInLine", () => {
+  it("finds duplicate task prefixes and keeps the last prefix", () => {
+    expect(findRepeatedTaskMarkerPrefixRangeInLine("- [ ] - [ ] hello")).toEqual({
+      fromCh: 0,
+      toCh: 6,
+    });
+    expect(findRepeatedTaskMarkerPrefixRangeInLine("- [ ] - [x] hello")).toEqual({
+      fromCh: 0,
+      toCh: 6,
+    });
+  });
+
+  it("preserves indentation by deleting only repeated prefixes after the indent", () => {
+    expect(findRepeatedTaskMarkerPrefixRangeInLine("  - [x] - [ ] hello")).toEqual({
+      fromCh: 2,
+      toCh: 8,
+    });
+  });
+
+  it("ignores ordinary tasks and paragraphs", () => {
+    expect(findRepeatedTaskMarkerPrefixRangeInLine("- [ ] hello")).toBeNull();
+    expect(findRepeatedTaskMarkerPrefixRangeInLine("hello - [ ] world")).toBeNull();
+  });
+});
+
+describe("findRepeatedTaskMarkerPrefixRanges", () => {
+  it("returns deletion ranges for repeated task prefixes in text", () => {
+    expect(
+      findRepeatedTaskMarkerPrefixRanges(
+        "a\n- [ ] - [ ] hello\n  - [x] - [ ] ⭐ 📤 hello %%kt-important%%"
+      )
+    ).toEqual([
+      { from: 2, to: 8 },
+      { from: 22, to: 28 },
+    ]);
+  });
+
+  it("does not return ranges for normal task lines", () => {
+    expect(findRepeatedTaskMarkerPrefixRanges("- [ ] hello\nplain")).toEqual([]);
   });
 });
 

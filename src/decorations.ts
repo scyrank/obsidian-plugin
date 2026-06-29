@@ -19,6 +19,7 @@ import {
 } from "@codemirror/view";
 import {
   findTaskMarkerRangeInLine,
+  findRepeatedTaskMarkerPrefixRanges,
   getContinuationTaskPrefix,
   isTaskMarkerSelected,
   type TaskMarkerState,
@@ -260,14 +261,19 @@ function cleanupVisibleMarkerOnlyLines(view: EditorView): boolean {
   return true;
 }
 
-function cleanupStandaloneImportantMarkerLines(
+function cleanupDocumentAfterTransaction(
   transaction: Transaction
 ): TransactionSpec | readonly TransactionSpec[] {
   if (!transaction.docChanged) {
     return transaction;
   }
 
-  const changes = findImportantMarkerOnlyLineRanges(transaction.newDoc.toString()).map((range) => ({
+  const text = transaction.newDoc.toString();
+  const rangesToDelete = mergeRanges([
+    ...findImportantMarkerOnlyLineRanges(text),
+    ...findRepeatedTaskMarkerPrefixRanges(text),
+  ]);
+  const changes = rangesToDelete.map((range) => ({
     from: range.from,
     to: range.to,
     insert: "",
@@ -585,7 +591,7 @@ const editorDecorationPlugin = ViewPlugin.fromClass(
 );
 
 export const importantLineExtension = [
-  EditorState.transactionFilter.of(cleanupStandaloneImportantMarkerLines),
+  EditorState.transactionFilter.of(cleanupDocumentAfterTransaction),
   editorDecorationPlugin,
   EditorView.domEventHandlers({
     copy: (event, view) => {
