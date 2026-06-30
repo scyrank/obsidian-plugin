@@ -1,7 +1,19 @@
+body {
+  --kh-task-important-bg: rgba(255, 230, 120, 0.30);
+  --kh-task-important-color: #ff4b3e;
+  --kh-task-important-weight: 600;
+}
+
+.theme-light {
+  --kh-task-important-bg: #ffff00;
+  --kh-task-important-color: #ff0000;
+  --kh-task-important-weight: 400;
+}
+
 .kh-task-important-text {
-  background-color: rgba(255, 230, 120, 0.30);
-  color: #ff4b3e;
-  font-weight: 600;
+  background-color: var(--kh-task-important-bg);
+  color: var(--kh-task-important-color);
+  font-weight: var(--kh-task-important-weight);
   border-radius: 4px;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;

@@ -1,6 +1,6 @@
 {
   "name": "khala-task-marker",
-  "version": "0.1.20",
+  "version": "0.1.21",
   "description": "Enhanced task marker system for Obsidian.",
   "main": "main.js",
   "scripts": {
