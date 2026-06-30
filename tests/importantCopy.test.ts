@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   extendCopyEndChForImportantMarker,
   findImportantMarkerOnlyLineRanges,
+  findInlineImportantMarkerRanges,
   findImportantMarkerRangeInLine,
   getImportantMarkerLeftArrowTarget,
   getImportantMarkerRightArrowTarget,
@@ -48,6 +49,32 @@ describe("findImportantMarkerOnlyLineRanges", () => {
     expect(findImportantMarkerOnlyLineRanges("a %%kt-important%%\n  %%kt-important%%")).toEqual([
       { from: 19, to: 37 },
     ]);
+  });
+});
+
+describe("findInlineImportantMarkerRanges", () => {
+  it("removes inline markers while keeping the trailing marker", () => {
+    expect(findInlineImportantMarkerRanges("A %%kt-important%% B %%kt-important%%")).toEqual([
+      { from: 2, to: 19 },
+    ]);
+  });
+
+  it("removes inline markers without a trailing marker", () => {
+    expect(findInlineImportantMarkerRanges("A %%kt-important%% B")).toEqual([
+      { from: 2, to: 19 },
+    ]);
+  });
+
+  it("keeps a valid trailing marker", () => {
+    expect(findInlineImportantMarkerRanges("A %%kt-important%%")).toEqual([]);
+  });
+
+  it("only removes inline markers from affected lines", () => {
+    expect(
+      findInlineImportantMarkerRanges(
+        "clean %%kt-important%%\nA %%kt-important%% B\nplain"
+      )
+    ).toEqual([{ from: 25, to: 42 }]);
   });
 });
 

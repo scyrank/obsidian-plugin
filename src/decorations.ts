@@ -28,6 +28,7 @@ import {
   extendCopyEndChForImportantMarker,
   getImportantMarkerEnterInsertPosition,
   findImportantMarkerOnlyLineRanges,
+  findInlineImportantMarkerRanges,
   findImportantMarkerRangeInLine,
   getImportantMarkerLeftArrowTarget,
   getImportantMarkerRightArrowTarget,
@@ -271,6 +272,7 @@ function cleanupDocumentAfterTransaction(
   const text = transaction.newDoc.toString();
   const rangesToDelete = mergeRanges([
     ...findImportantMarkerOnlyLineRanges(text),
+    ...findInlineImportantMarkerRanges(text),
     ...findRepeatedTaskMarkerPrefixRanges(text),
   ]);
   const changes = rangesToDelete.map((range) => ({

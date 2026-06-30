@@ -1,4 +1,5 @@
 const IMPORTANT_MARKER_RE = /\s*%%kt-important%%\s*$/;
+const IMPORTANT_MARKER = "%%kt-important%%";
 
 export type ImportantMarkerRange = {
   fromCh: number;
@@ -6,6 +7,11 @@ export type ImportantMarkerRange = {
 };
 
 export type ImportantMarkerOnlyLineRange = {
+  from: number;
+  to: number;
+};
+
+export type InlineImportantMarkerRange = {
   from: number;
   to: number;
 };
@@ -41,6 +47,48 @@ export function findImportantMarkerOnlyLineRanges(text: string): ImportantMarker
     }
 
     lineStart = lineEnd + 1;
+  }
+
+  return ranges;
+}
+
+export function findInlineImportantMarkerRanges(text: string): InlineImportantMarkerRange[] {
+  const ranges: InlineImportantMarkerRange[] = [];
+  let lineStart = 0;
+
+  for (const line of text.split("\n")) {
+    const trailingMarker = findImportantMarkerRangeInLine(line);
+    let searchFrom = 0;
+
+    while (searchFrom < line.length) {
+      const markerFrom = line.indexOf(IMPORTANT_MARKER, searchFrom);
+
+      if (markerFrom === -1) {
+        break;
+      }
+
+      const markerTo = markerFrom + IMPORTANT_MARKER.length;
+      const isTrailingMarker =
+        trailingMarker !== null &&
+        markerFrom >= trailingMarker.fromCh &&
+        markerTo <= trailingMarker.toCh;
+
+      if (!isTrailingMarker) {
+        const removeFollowingSpace =
+          markerTo < line.length &&
+          /\s/.test(line[markerTo]) &&
+          (markerFrom === 0 || /\s/.test(line[markerFrom - 1]));
+
+        ranges.push({
+          from: lineStart + markerFrom,
+          to: lineStart + markerTo + (removeFollowingSpace ? 1 : 0),
+        });
+      }
+
+      searchFrom = markerTo;
+    }
+
+    lineStart += line.length + 1;
   }
 
   return ranges;
